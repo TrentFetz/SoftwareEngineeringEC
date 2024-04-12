@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,7 @@ public class PostController {
     public String Index(Model model, HttpSession sesh) {
         LoggerPost pl = getLogger(sesh);
         model.addAttribute("isLoggedIn", pl.GetLoggedIn());
+        pl.setLastActivityTime(System.currentTimeMillis());
         return "index";
     }
 
@@ -43,6 +45,7 @@ public class PostController {
     public String Login(Model model, HttpSession sesh) {
         LoggerPost pl = getLogger(sesh);
         model.addAttribute("isLoggedIn", pl.GetLoggedIn());
+        pl.setLastActivityTime(System.currentTimeMillis());
         return "login";
     }
 
@@ -67,6 +70,7 @@ public class PostController {
         else
             return "index";
 
+        pl.setLastActivityTime(System.currentTimeMillis());
         return "login";
     }
 
@@ -76,6 +80,7 @@ public class PostController {
         LoginInfo login = new LoginInfo("", "", "", "", null, null, null);
         pl.Login(login, PostDB.H2_DRIVER);
         model.addAttribute("isLoggedIn", pl.GetLoggedIn());
+        pl.setLastActivityTime(System.currentTimeMillis());
         return "index";
     }
 
@@ -92,12 +97,21 @@ public class PostController {
     Model model, HttpSession sesh) {
         model.addAttribute("title","Post Page");
         LoggerPost pl = getLogger(sesh);
+        if(System.currentTimeMillis() - pl.getLastActivityTime()>60000)
+        {
+            pl.Logout();
+            model.addAttribute("isLoggedIn", pl.GetLoggedIn());
+            model.addAttribute("message", "You must be logged in");
+            System.out.println("failed");
+            return "index";
+        }
         model.addAttribute("isLoggedIn", pl.GetLoggedIn());
-        if (pl.GetLoggedIn())
+        if (pl.GetLoggedIn()) {
             pl.PostToDB(post);
+            pl.setLastActivityTime(System.currentTimeMillis());
+        }
         return "index";
     }
-
 
     @RequestMapping(value = "/history")
     public String GetAllPosts(Model model, HttpSession sesh) {
@@ -106,6 +120,7 @@ public class PostController {
         model.addAttribute("isLoggedIn", pl.GetLoggedIn());
         model.addAttribute("history", history);
         model.addAttribute("newLineChar", '\n');
+        pl.setLastActivityTime(System.currentTimeMillis());
         return "history";
     }
 
@@ -120,6 +135,7 @@ public class PostController {
             model.addAttribute("deleted", deleted);
             model.addAttribute("deleteAttempted", true);
         }
+        pl.setLastActivityTime(System.currentTimeMillis());
         return "delete";
     }
 
