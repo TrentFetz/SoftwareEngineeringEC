@@ -9,15 +9,24 @@ public class LoggerPost {
     private String filePath;
     private PostDB db;
 
+    private long lastActivityTime;
     public LoggerPost(String path, String known_hosts_file) {
         db = new PostDB(known_hosts_file);
         this.filePath = path;
+        this.lastActivityTime = 0;
         File logFile = new File(path);
         try {
             logFile.createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void setLastActivityTime(long time){
+        this.lastActivityTime = time;
+    }
+    public long getLastActivityTime(){
+        return this.lastActivityTime;
     }
 
     public void Login(LoginInfo login, String driver) {
